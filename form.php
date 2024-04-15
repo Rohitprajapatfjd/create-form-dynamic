@@ -1,4 +1,4 @@
-<?php
+<?php session_start();
 include ("./config.php");
 
 $id = $_GET['id'];
@@ -7,27 +7,27 @@ $sql = "SELECT * FROM formlist WHERE title like '%$id%'";
 $run = mysqli_query($conn,$sql);
 $fetch = mysqli_fetch_all($run,MYSQLI_ASSOC);
 
-// function get_client_ip_server()
-// {
-//     $ipaddress = '';
-//     if ($_SERVER['HTTP_CLIENT_IP'])
-//         $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-//     else if ($_SERVER['HTTP_X_FORWARDED_FOR'])
-//         $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-//     else if ($_SERVER['HTTP_X_FORWARDED'])
-//         $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-//     else if ($_SERVER['HTTP_FORWARDED_FOR'])
-//         $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-//     else if ($_SERVER['HTTP_FORWARDED'])
-//         $ipaddress = $_SERVER['HTTP_FORWARDED'];
-//     else if ($_SERVER['REMOTE_ADDR'])
-//         $ipaddress = $_SERVER['REMOTE_ADDR'];
-//     else
-//         $ipaddress = 'UNKNOWN';
+function get_client_ip_server()
+{
+    $ipaddress = '';
+    if ($_SERVER['HTTP_CLIENT_IP'])
+        $ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+    else if ($_SERVER['HTTP_X_FORWARDED_FOR'])
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+    else if ($_SERVER['HTTP_X_FORWARDED'])
+        $ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+    else if ($_SERVER['HTTP_FORWARDED_FOR'])
+        $ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+    else if ($_SERVER['HTTP_FORWARDED'])
+        $ipaddress = $_SERVER['HTTP_FORWARDED'];
+    else if ($_SERVER['REMOTE_ADDR'])
+        $ipaddress = $_SERVER['REMOTE_ADDR'];
+    else
+        $ipaddress = 'UNKNOWN';
 
-//     return $ipaddress;
-// }
-// get_client_ip_server();
+    return $ipaddress;
+}
+
 
 
 
@@ -68,17 +68,21 @@ $fetch = mysqli_fetch_all($run,MYSQLI_ASSOC);
 
         </div>
         <div class="form-bottom">
-            <form action="./submitform.php" method="post" id="submitform">
+            <form action="./submitform.php" method="post" id="submitform" enctype="multipart/form-data">
                              
                 <div class="form_title">
                     <img src="./img/best.gif" width="330" alt="">
                     <h1 id="gets" data-ip="127.000544" data-title="<?php echo $row['title']; ?>"><?php echo $row['title']?></h1>
+                     <input type="hidden" class="input-field" name="ip" value="<?php echo(get_client_ip_server()) ?>" id="ip">
+                     <input type="hidden" class="input-field" name="id" value="<?php echo $id?>" id="id">
+
+                      <input type="hidden" placeholder="Username" class="input-field" name="title" id="title" value="<?php echo $row['title']; ?>" required>
                 </div>
                 <div class="forminputs">
                     <?php if($row['name'] == 1){?>
                     <div class="input">
                         <input type="text" placeholder="Username" class="input-field"  name="name" id="name" required>
-                        <!-- <input type="hidden" placeholder="Username" class="input-field" name="title" id="title" value="" required> -->
+                       
                         <i class="bx bx-user icon"></i>
                     </div>
                     <?php  }  ?>
@@ -121,13 +125,12 @@ $fetch = mysqli_fetch_all($run,MYSQLI_ASSOC);
                      <?php if($row['dob'] == 1){?>
                     <div class="input">
                         <input type="date" placeholder="DOB" class="input-field" name="dob" id="dob" required>
-                        <!-- <input type="hidden" class="input-field" name="ip" value="127.100.277" id="ip"> -->
+                       
                     </div>
                     <?php  }  ?>
                      <?php if($row['image'] == 1){?>
                     <div class="input">
-                        <input type="file"  class="input-field customFileInput" name="image"
-                            id="image" required>
+                        <input type="file"  class="input-field customFileInput" id="img-photo" name="image" required>
                         <i class="bx bx-upload icon"></i>
                     </div>
                     <?php  }  ?>
@@ -146,7 +149,10 @@ $fetch = mysqli_fetch_all($run,MYSQLI_ASSOC);
                 </div>
                 <?php }   ?>
             </form>
-            <div id="message"></div>
+            <?php if ($_SESSION['status'] == 'true') { ?>
+                <p class="message"><?php echo $_SESSION['message'] ?></p>
+                <?php session_destroy();
+            } ?>
         </div>
     </div>
  <script src="https://code.jquery.com/jquery-3.7.1.js"
@@ -158,52 +164,6 @@ $fetch = mysqli_fetch_all($run,MYSQLI_ASSOC);
              document.querySelector(".container").style.height = '630px';
             }
 
-            $(document).ready(function() {
-              $("#submitform").on("submit",function(e){
-                e.preventDefault();
-               var ids =  $("#gets").data();
-                var datas1 = [];
-                datas1['0'] = {name: 'title', value:`${ids.title}`};
-                 datas1['1'] = {name: 'ip', value:`${ids.ip}`};
-               var datas2 = $("#submitform").serializeArray();
-                 var datas = datas2.concat(datas1);
-                // console.log(datas);
-                var obj = {};
-                for (let index = 0; index < datas.length; index++) {
-                    obj[datas[index].name] = datas[index].value;
-                    
-                }
-               var jsons =JSON.stringify(obj);
-                console.log(jsons)
-                $.ajax({
-                    dataType: 'json',
-                    type:'POST',
-                    url: 'http://localhost/project/client-pg-and-csv-code/newone/api.php',                  
-                    data: jsons,
-                    cache: false,
-                      contentType: false,
-                    processData: false,
-                    beforeSend:function(){
-                      $("#message").fadeIn();
-                      $("#message").html("Loading");
-                    },
-                    success: function (resp) {
-                       if(resp.status){
-                       $("#submitform").trigger("reset");
-                        $("#message").empty();
-                        $("#message").append(resp.message);
-                        setInterval(function() {
-                           $("#message").fadeOut("ease");
-                        },5000);
-                       
-                       }else{
-                        console.log("Error");
-                       }
-                    }
-                })
-              })
-            })
-           
         </script>
 </body>
 

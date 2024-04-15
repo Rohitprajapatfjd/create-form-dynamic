@@ -21,16 +21,17 @@ $data = json_decode(file_get_contents("php://input"),true);
 
 extract($data);
 
+
 $sql = "SELECT * FROM userdata WHERE phoneno ='$phoneno' or uid ='$uid'";
 $run = mysqli_query($conn, $sql);
 $row = mysqli_num_rows($run);
 if ($row == 0) {
 
-    if (!empty($_FILES['image']['name'])) {
+    if (!empty($image['name'])) {
         $file_upload_flag = "true";
-        $size = $_FILES['image']['size'];
-        $tmp = $_FILES['image']['tmp_name'];
-        $type = $_FILES['image']['type'];
+        $size = $image['size'];
+        $tmp = $image['tmp_name'];
+        $type = $image['type'];
         $msg = '';
         if ($size > 2500000) {
             $msg .= "Your uploaded file size is more than 2500KB <br>";
@@ -40,13 +41,14 @@ if ($row == 0) {
             $msg .= "Your uploaded file must be of JPG or png.";
             $file_upload_flag = "false";
         }
-        $file_name = $_FILES['image']['name'];
+        $file_name = $image['name'];
         $temp = explode(".", $file_name);
         $newfilename = round(microtime(true)) . '.' . end($temp);
         // the path with the file name where the file will be stored
         $add = "img/" . $newfilename;
+       
         if ($file_upload_flag == 'true') {
-            if (move_uploaded_file($_FILES['image']['tmp_name'], $add)) {
+            if (move_uploaded_file($image['tmp_name'], $add)) {
                 // do your coding here to give a thanks message or any other thing.
                 $msg .= "File successfully uploaded";
             } else {
@@ -56,6 +58,14 @@ if ($row == 0) {
             $msg .= " Failed to upload file ";
         }
     }
+
+    var_dump($add);
+    echo ("<br>");
+    print_r($tmp);
+    echo ("<br>");
+    print_r($_FILES['image']['name']);
+
+    die;
 
     $sql2 = "INSERT INTO userdata (name,email,address,phoneno,uid,dob,message,paths,gender,ip,title) values('$name','$email','$address','$phoneno','$uid','$dob','$texts','$add','$gender','$ip','$title')";
 

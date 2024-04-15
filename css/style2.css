@@ -297,7 +297,7 @@ option {
     box-shadow: 0 0 12px rgb(112, 111, 111);
 }
 
-#message{
+.message{
     color: white;
     font-size: 16px;
     padding-top: 2px;
